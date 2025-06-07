@@ -1,0 +1,2 @@
+# robloxafk
+Roblox Afk Script
