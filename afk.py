@@ -150,34 +150,57 @@ def check_ahk_installation():
     """Check if AutoHotkey is installed and configured"""
     global ahk
     
-    if ahk is not None:
+    # First check if we have a valid path in config
+    config = load_config()
+    ahk_path = config.get("AHK", "path", fallback="")
+    
+    # If we have a configured path, use it without additional checking
+    if ahk_path and os.path.isfile(ahk_path):
+        print(f"Using AutoHotkey from configured path: {ahk_path}")
+        
+        # Try to initialize AHK with this path directly
         try:
-            # Test a simple command to verify AHK is working
-            version = ahk.version
-            print(f"AutoHotkey found: {version}")
+            from ahk import AHK
+            ahk = AHK(executable_path=ahk_path)
+            print("AHK initialized successfully")
             return True
         except Exception as e:
-            print(f"Error testing AHK: {e}")
+            print(f"Error initializing AHK with configured path: {e}")
     
-    # Try to initialize again
-    if initialize_ahk():
+    # If no path configured or failed to initialize, try with default path
+    try:
+        from ahk import AHK
+        ahk = AHK()
+        
+        # If successful, update the config with the path
+        if hasattr(ahk, "executable_path") and ahk.executable_path:
+            config["AHK"]["path"] = ahk.executable_path
+            save_config(config)
+            print(f"AHK initialized with default path: {ahk.executable_path}")
+        else:
+            print("AHK initialized with unknown path")
+            
         return True
+    except Exception as e:
+        print(f"Failed to initialize AHK with default path: {e}")
     
-    # Ask user to select AHK executable
+    # If all automatic methods failed, ask user to select the executable
     msg_box = QtWidgets.QMessageBox()
     msg_box.setWindowTitle("AutoHotkey Required")
     msg_box.setText("AutoHotkey is required but couldn't be found automatically.")
-    msg_box.setInformativeText("Would you like to select the AutoHotkey executable manually?")
-    msg_box.setStandardButtons(QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No)
-    msg_box.setDefaultButton(QtWidgets.QMessageBox.Yes)
+    msg_box.setInformativeText("Please select the AutoHotkey executable (usually found in C:\\Program Files\\AutoHotkey\\AutoHotkey.exe)")
+    select_btn = msg_box.addButton("Select AutoHotkey", QtWidgets.QMessageBox.YesRole)
+    cancel_btn = msg_box.addButton("Cancel", QtWidgets.QMessageBox.RejectRole)
     
-    if msg_box.exec_() == QtWidgets.QMessageBox.Yes:
+    msg_box.exec_()
+    
+    if msg_box.clickedButton() == select_btn:
         ahk_path = select_ahk_executable()
         if ahk_path:
-            # Try to initialize with the selected path
             try:
                 from ahk import AHK
                 ahk = AHK(executable_path=ahk_path)
+                print(f"AHK initialized with selected path: {ahk_path}")
                 return True
             except Exception as e:
                 print(f"Failed to initialize AHK with selected path: {e}")
@@ -185,6 +208,7 @@ def check_ahk_installation():
     return False
 
 # Constants
+SCRIPT_VERSION = "1.0.2"  # Add version tracking
 PIXEL_TO_CHECK = (1670, 650)
 EXPECTED_COLOR = (58, 59, 61)
 BUTTON_PIXEL = (1822, 785)
@@ -386,7 +410,9 @@ def create_overlay():
     return overlay
 
 def run_ahk_script():
-    """Use AHK Python library to perform clicking"""
+    """Use AHK Python library or click.exe to perform clicking"""
+    global ahk
+    
     try:
         if ahk is not None:
             # Instead of using win_activate which may cause the error,
@@ -402,35 +428,10 @@ def run_ahk_script():
             print(f"Clicked at {BUTTON_PIXEL} using AHK script")
             return True
             
-        return False
+        return False  # AHK not available
     except Exception as e:
         print(f"Failed to execute AHK command: {e}")
-        
-        # Try an alternative approach using subprocess directly
-        try:
-            print("Trying alternative method for clicking...")
-            script_content = f"""
-            WinActivate, Roblox
-            Sleep 200
-            Click {BUTTON_PIXEL[0]}, {BUTTON_PIXEL[1]}
-            """
-            
-            # Create temporary AHK script
-            temp_script_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "temp_click.ahk")
-            with open(temp_script_path, "w") as f:
-                f.write(script_content)
-                
-            # Get AHK path from config
-            config = load_config()
-            ahk_path = config.get("AHK", "path", fallback="AutoHotkey.exe")
-            
-            # Run AHK directly using subprocess
-            subprocess.Popen([ahk_path, temp_script_path])
-            print("Alternative click method executed")
-            return True
-        except Exception as alt_e:
-            print(f"Alternative method also failed: {alt_e}")
-            return False
+        return False
 
 def afk_loop():
     """The main AFK functionality loop"""
@@ -510,7 +511,17 @@ def main():
     """Main function to run the AFK script"""
     global app, overlay
     
-    print(f"=== AFK Script Started ===")
+    print(r"""   
+   _____  _______________  __.    ____________________________.________________________
+  /  _  \ \_   _____/    |/ _|   /   _____/\_   ___ \______   \   \______   \__    ___/
+ /  /_\  \ |    __) |      <     \_____  \ /    \  \/|       _/   ||     ___/ |    |   
+/    |    \|     \  |    |  \    /        \\     \___|    |   \   ||    |     |    |   
+\____|__  /\___  /  |____|__ \  /_______  / \______  /____|_  /___||____|     |____|   
+        \/     \/           \/          \/         \/       \/                                 
+    """)
+    
+    # Print version separately to allow for variable substitution
+    print(f"V{SCRIPT_VERSION} - Doge's AFK Script")
     
     # Load configuration
     config = load_config()
@@ -526,11 +537,7 @@ def main():
     # Load pixel coordinates from active profile
     load_pixel_coordinates()
     
-    # Initialize AHK
-    if not initialize_ahk():
-        print("Warning: AHK could not be initialized automatically")
-    
-    # Check for AHK - exit if not found
+    # Check for AHK setup
     if not check_ahk_installation():
         error_box = QtWidgets.QMessageBox()
         error_box.setWindowTitle("AutoHotkey Required")
