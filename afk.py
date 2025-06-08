@@ -59,6 +59,18 @@ def load_config():
         "expected_button_color_b": "255"
     }
     
+    config["surfacepro"] = {
+        "pixel_check_x": "1361",
+        "pixel_check_y": "785",
+        "expected_color_r": "58",
+        "expected_color_g": "59",
+        "expected_color_b": "61",
+        "button_pixel_x": "1556",
+        "button_pixel_y": "1044",
+        "expected_button_color_r": "255",
+        "expected_button_color_g": "255",
+        "expected_button_color_b": "255"
+    }
     # Add active_profile setting
     config["General"] = {"active_profile": "3440x1440"}
     
