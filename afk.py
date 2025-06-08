@@ -496,7 +496,7 @@ def toggle_afk():
             overlay.hide_overlay()
 
 def show_simple_config_dialog():
-    """Show a simple configuration dialog with just two options"""
+    """Show a simple configuration dialog with just three options"""
     msg_box = QtWidgets.QMessageBox()
     msg_box.setWindowTitle("Select Roblox Window Mode")
     msg_box.setText("Which Roblox window mode are you using?")
@@ -512,16 +512,44 @@ def show_simple_config_dialog():
     
     # Handle the result
     if msg_box.clickedButton() == fullscreen_btn:
-        switch_profile("3440x1440")  # Changed from "Settings"
+        switch_profile("3440x1440")
         return True
     elif msg_box.clickedButton() == windowed_btn:
         switch_profile("1080p_Windowed")
         return True
     elif msg_box.clickedButton() == surface_btn:
-        switch_profile("surfacepro")
-        return True  # Add missing return statement
+        # Ensure we use the exact profile name from the config
+        if switch_profile("surfacepro") == False:
+            # If profile doesn't exist, create it
+            print("Creating Surface Pro profile")
+            create_surface_pro_profile()
+            switch_profile("surfacepro")
+        return True
     else:
         return False
+
+def create_surface_pro_profile():
+    """Create the Surface Pro profile if it doesn't exist"""
+    config = load_config()
+    
+    if not config.has_section("surfacepro"):
+        config["surfacepro"] = {
+            "pixel_check_x": "1361",
+            "pixel_check_y": "785",
+            "expected_color_r": "58",
+            "expected_color_g": "59",
+            "expected_color_b": "61",
+            "button_pixel_x": "1556",
+            "button_pixel_y": "1044",
+            "expected_button_color_r": "255",
+            "expected_button_color_g": "255",
+            "expected_button_color_b": "255",
+            "jump_interval": "5",
+            "toggle_key": "f4"
+        }
+        save_config(config)
+        print("Surface Pro profile created")
+    return True
 
 def main():
     """Main function to run the AFK script"""
