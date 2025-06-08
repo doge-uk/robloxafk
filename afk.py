@@ -501,7 +501,7 @@ def show_simple_config_dialog():
     msg_box.setWindowTitle("Select Roblox Window Mode")
     msg_box.setText("Which Roblox window mode are you using?")
     
-    # Add buttons for the two main profiles
+    # Add buttons for the three main profiles
     fullscreen_btn = msg_box.addButton("3440x1440", QtWidgets.QMessageBox.ActionRole)
     windowed_btn = msg_box.addButton("1080p Windowed", QtWidgets.QMessageBox.ActionRole)
     surface_btn = msg_box.addButton("Surface Pro 5 Windowed", QtWidgets.QMessageBox.ActionRole)
@@ -519,6 +519,7 @@ def show_simple_config_dialog():
         return True
     elif msg_box.clickedButton() == surface_btn:
         switch_profile("surfacepro")
+        return True  # Add missing return statement
     else:
         return False
 
