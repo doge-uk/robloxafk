@@ -504,6 +504,7 @@ def show_simple_config_dialog():
     # Add buttons for the two main profiles
     fullscreen_btn = msg_box.addButton("3440x1440", QtWidgets.QMessageBox.ActionRole)
     windowed_btn = msg_box.addButton("1080p Windowed", QtWidgets.QMessageBox.ActionRole)
+    surface_btn = msg_box.addButton("Surface Pro 5 Windowed", QtWidgets.QMessageBox.ActionRole)
     cancel_btn = msg_box.addButton(QtWidgets.QMessageBox.Cancel)
     
     # Show the dialog
@@ -516,6 +517,8 @@ def show_simple_config_dialog():
     elif msg_box.clickedButton() == windowed_btn:
         switch_profile("1080p_Windowed")
         return True
+    elif msg_box.clickedButton() == surface_btn:
+        switch_profile("surfacepro")
     else:
         return False
 
